@@ -16,7 +16,7 @@ public:
     DataClient();
     ~DataClient();
     
-    void SendData(std::fstream& stream, int& total_len);
+    bool SendData(std::fstream& stream, int& total_len);
     bool RecvData(std::fstream& stream, int& total_len);
     bool RecvDir(char* dirs, int max_len, int& total_len);
 };

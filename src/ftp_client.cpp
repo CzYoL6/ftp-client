@@ -20,7 +20,7 @@ public:
 
     bool                    Init();
     bool                    Connect(const std::string& ip, int port);
-    const std::string       ListFile();
+    bool  			        ListFile(std::string* files);
     bool                    UploadFile(const std::string& file_path);
     bool                    DownloadFile(const std::string& file_path);
     bool                    DeleteFile(const std::string& file_path);
@@ -35,13 +35,12 @@ FtpClient::Impl::Impl()
 
 FtpClient::Impl::~Impl()
 {
-    
 }
 
 int FtpClient::Impl::GetPort(const char* s){
     std::string res_str(s);
-	boost::algorithm::erase_head(res_str, 27);
-	boost::algorithm::erase_tail(res_str, 4);
+	boost::algorithm::erase_head(res_str, 23);
+	//boost::algorithm::erase_tail(res_str, 4);
 	std::vector<std::string> res_net_strs;
 	boost::algorithm::split(res_net_strs, res_str, boost::is_any_of(","));
 	int designated_port = atoi(res_net_strs[4].c_str()) * 256 + atoi(res_net_strs[5].c_str());
@@ -62,65 +61,55 @@ bool FtpClient::Impl::Login(const std::string& username, const std::string& pwd)
 	std::string username_cmd = "USER ";
 	username_cmd.append(username).append("\r\n");
 
-	char recv[1024];
-	int res = 0;
-
-	p_cc->SendReq(username_cmd);
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	if(!p_cc->SendReq(username_cmd)) return false;
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_LOGIN_USERNAME)) return false;
 	
 	std::string pwd_cmd = "PASS ";
 	pwd_cmd.append(pwd).append("\r\n");
 
-	p_cc->SendReq(pwd_cmd);
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	if(!p_cc->SendReq(pwd_cmd)) return false;
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_LOGIN_PASSWORD)) return false;
 
 	return true;
 }
 
 bool FtpClient::Impl::Connect(const std::string& ip, int port)
 {
-
     if(!p_cc->Connect(ip,port)){
 		this->ip = "";
 		return false;
 	}
 	else{
 		this->ip = ip;
-		char recv[1024];
-		int res = 0;
-		memset(recv, 0, sizeof(recv));
-		p_cc->RecvResponse(recv, 1024, res);
-		return true;
+		
+		RESPONSE_TYPE res;
+		p_cc->RecvResponse(EXPECTED_RES_CODE_CONNECTION_ESTABLISHED);
 	}
 }
 
-const std::string FtpClient::Impl::ListFile()
+bool FtpClient::Impl::ListFile(std::string* files)
 {
-    char recv[1024];
-	int res = 0;
-
 	//get  pwd
-	p_cc->SendReq("PWD\r\n");
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	if(!p_cc->SendReq("PWD\r\n")) return false;
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_PWD)) return false;
 
 
 	//get dir file list
-	p_cc->SendReq("PASV\r\n");
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
-	int designated_port = GetPort(recv);
+	if(!p_cc->SendReq("PASV\r\n")) return false;
+	
+	std::string msg;
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_PASVMODE, &msg)) return false;
+	int designated_port = GetPort(msg.c_str());
 
 	DataClient dc;
-	dc.Init();
-	dc.Connect(ip, designated_port);
+	if(!dc.Init()) return false;
+	if(!dc.Connect(ip, designated_port)) return false;
 
 
-	p_cc->SendReq("LIST\r\n");
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	if(!p_cc->SendReq("LIST\r\n")) return false;
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_OPENCHANNEL)) return false;
 	
 
 	char dirs[2048];
@@ -128,45 +117,45 @@ const std::string FtpClient::Impl::ListFile()
 	int total_len = 0;
 	while(!dc.RecvDir(dirs + total_len, sizeof(dirs) - total_len, total_len));
 
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_TRANSFERFINISHED)) return false;
 
-	printf("\n\n");
+	LOGMSG("File list: ");
 	printf("================================== file ================================\n");
 	printf(dirs);
 	printf("========================================================================\n");
-	printf("\n\n");
-
+	printf("\n");
 
 	dc.Close();
 
 	std::string dirs_str(dirs);
-	return dirs_str;
 
+	if(files) *files = dirs_str;
+
+	return true;
 }
 
 bool FtpClient::Impl::UploadFile(const std::string& file_path)
 {
-    char recv[1024];
-	int res = 0;
 	
-	p_cc->SendReq("TYPE I\r\n");
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	if(!p_cc->SendReq("TYPE I\r\n")) return false;
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_SET_BINARY)) return false;
 
-	p_cc->SendReq("PASV\r\n");
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
-	int designated_port = GetPort(recv);
+	if(!p_cc->SendReq("PASV\r\n")) return false;
+	
+	std::string msg;
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_PASVMODE, &msg)) return false;
+	int designated_port = GetPort(msg.c_str());
 	DataClient dc;
-	dc.Init();
-	dc.Connect(ip, designated_port);
+	if(!dc.Init()) return false;
+	if(!dc.Connect(ip, designated_port)) return false;
 
 	std::string retr = "STOR ";
 	retr.append(file_path).append("\r\n");
-	p_cc->SendReq(retr);
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	if(!p_cc->SendReq(retr)) return false;
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_OPENCHANNEL)) return false;
 
 	std::fstream stream;
 	stream.open(file_path, std::ios::in | std::ios::binary);
@@ -176,13 +165,13 @@ bool FtpClient::Impl::UploadFile(const std::string& file_path)
 	stream.seekg(0, stream.beg);
 	LOGMSG("starting to transfer file (%d bytes)", left_to_send);
 	while(left_to_send){
-		dc.SendData(stream, left_to_send);
+		if(!dc.SendData(stream, left_to_send)) return false;
 	}
 	stream.close();
 	dc.Close();
 
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_TRANSFERFINISHED)) return false;
 	
 	LOGMSG("file %s successfully sent.\n", file_path.c_str());
 
@@ -192,27 +181,26 @@ bool FtpClient::Impl::UploadFile(const std::string& file_path)
 
 bool FtpClient::Impl::DownloadFile(const std::string& file_path)
 {
-    char recv[1024];
-	int res = 0;
 	
-	p_cc->SendReq("TYPE I\r\n");
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	if(!p_cc->SendReq("TYPE I\r\n")) return false;
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_SET_BINARY)) return false;
 
 	p_cc->SendReq("PASV\r\n");
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
-	int designated_port = GetPort(recv);
+	
+	std::string msg;
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_PASVMODE, &msg)) return false;
+
+	int designated_port = GetPort(msg.c_str());
 	DataClient dc;
-	dc.Init();
-	dc.Connect(ip, designated_port);
-
-
+	if(!dc.Init()) return false;
+	if(!dc.Connect(ip, designated_port)) return false;
+	 
 	std::string retr = "RETR ";
 	retr.append(file_path).append("\r\n");
-	p_cc->SendReq(retr);
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	if(!p_cc->SendReq(retr)) return false;
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_OPENCHANNEL)) return false;
 
 
 	std::fstream stream;
@@ -220,8 +208,8 @@ bool FtpClient::Impl::DownloadFile(const std::string& file_path)
 	int total_len = 0;
 	while(!dc.RecvData(stream, total_len));
 	
-	memset(recv, 0, sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_TRANSFERFINISHED)) return false;
 	
 	stream.close();
 
@@ -240,7 +228,7 @@ bool FtpClient::Impl::DeleteFile(const std::string& file_path)
 
 	p_cc->SendReq(del_cmd);
 	memset(recv,0 ,sizeof(recv));
-	p_cc->RecvResponse(recv, 1024, res);
+	p_cc->RecvResponse(EXPECTED_RES_CODE_DELETE);
 
 	LOGMSG("successfully deleted file %s", file_path.c_str());
 }
@@ -267,9 +255,9 @@ bool FtpClient::Connect(const std::string& ip, int port)
     return true;
 }
 
-const std::string FtpClient::ListFile()
+bool FtpClient::ListFile(std::string* files)
 {
-    return p_impl->ListFile();
+    return p_impl->ListFile(files);
 }
 
 bool FtpClient::UploadFile(const std::string& file_path)

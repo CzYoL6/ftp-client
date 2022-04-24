@@ -16,7 +16,7 @@ DataClient::~DataClient()
 }
 
 
-void DataClient::SendData(std::fstream& stream, int& left)
+bool DataClient::SendData(std::fstream& stream, int& left)
 {
     char tmp_buf[1024];
     int len_to_send;
@@ -32,11 +32,12 @@ void DataClient::SendData(std::fstream& stream, int& left)
     int res = send(Client::get_sock(), tmp_buf, len_to_send, 0);
     if(res == -1){
         LOGERR("error sending.");
-        exit(-1);
+        return false;
     }
     else{
         left -= res;
     }
+    return true;
 }
 
 bool DataClient::RecvData(std::fstream& stream, int& total_len)

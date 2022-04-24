@@ -14,7 +14,8 @@ int main(int argc, char *argv[])
 
 	getchar();
 
-	fc.ListFile();
+	std::string files;
+	fc.ListFile(&files);
 
 	getchar();
 
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
 
 	getchar();
 
-	fc.DeleteFile("./新建文本文档.txt");
+	fc.DeleteFile("./新建文本文档2.txt");
 
 	getchar();
 
