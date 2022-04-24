@@ -1,0 +1,1 @@
+/usr/bin/c++   -g  -std=c++17   CMakeFiles/ftp_client.dir/src/client.cpp.o CMakeFiles/ftp_client.dir/src/control_client.cpp.o CMakeFiles/ftp_client.dir/src/data_client.cpp.o CMakeFiles/ftp_client.dir/src/main.cpp.o  -o ftp_client 
