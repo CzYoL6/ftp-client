@@ -177,52 +177,52 @@ void UploadFile(ControlClient& cc, const std::string& ip, const std::string& fil
 	LOGMSG("file %s successfully sent.\n", file_name.c_str());
 }
 
-int main(int argc, char *argv[])
-{
+// int main(int argc, char *argv[])
+// {
 	
-	std::string ip = "192.168.225.128";
+// 	std::string ip = "192.168.225.128";
 
-	ControlClient control_client;
-	control_client.Init();
-	control_client.Connect(ip, 21);
+// 	ControlClient control_client;
+// 	control_client.Init();
+// 	control_client.Connect(ip, 21);
 
-	char recv[1024];
-	int res = 0;
-	memset(recv, 0, sizeof(recv));
-	control_client.RecvResponse(recv, 1024, res);
+// 	char recv[1024];
+// 	int res = 0;
+// 	memset(recv, 0, sizeof(recv));
+// 	control_client.RecvResponse(recv, 1024, res);
 
-	//login
-	Login(control_client,"ftptest", "T0KH3QTRKM");
+// 	//login
+// 	Login(control_client,"ftptest", "T0KH3QTRKM");
 
-	control_client.SendReq("PWD\r\n");
-	memset(recv, 0, sizeof(recv));
-	control_client.RecvResponse(recv, 1024, res);
+// 	control_client.SendReq("PWD\r\n");
+// 	memset(recv, 0, sizeof(recv));
+// 	control_client.RecvResponse(recv, 1024, res);
 
-	//get dir file list
-	RefreshDir(control_client, ip);
+// 	//get dir file list
+// 	RefreshDir(control_client, ip);
 	
-	//get the file
-	// {
-	// std::string file_name;
-	// std::cin >> file_name;
-	// GetFile(control_client,ip, file_name);
-	// }
+// 	//get the file
+// 	// {
+// 	// std::string file_name;
+// 	// std::cin >> file_name;
+// 	// GetFile(control_client,ip, file_name);
+// 	// }
 
-	// //delete file
-	// {
-	// std::string file_name;
-	// std::cin >> file_name;
-	// DeleteFile(control_client, file_name);
-	// RefreshDir(control_client, ip);
-	// }
+// 	// //delete file
+// 	// {
+// 	// std::string file_name;
+// 	// std::cin >> file_name;
+// 	// DeleteFile(control_client, file_name);
+// 	// RefreshDir(control_client, ip);
+// 	// }
 
-	//upload file
-	{
-	std::string file_name;
-	std::cin >> file_name;
-	UploadFile(control_client, ip, file_name);
-	RefreshDir(control_client, ip);
-	}
+// 	//upload file
+// 	{
+// 	std::string file_name;
+// 	std::cin >> file_name;
+// 	UploadFile(control_client, ip, file_name);
+// 	RefreshDir(control_client, ip);
+// 	}
 
-	control_client.Close();
-}
+// 	control_client.Close();
+// }

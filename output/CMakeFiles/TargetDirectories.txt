@@ -1,3 +1,0 @@
-/mnt/e/Study/大学资料/网工/FtpClient/output/CMakeFiles/rebuild_cache.dir
-/mnt/e/Study/大学资料/网工/FtpClient/output/CMakeFiles/edit_cache.dir
-/mnt/e/Study/大学资料/网工/FtpClient/output/CMakeFiles/ftp_client.dir
