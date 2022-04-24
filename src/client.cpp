@@ -14,56 +14,61 @@ Client::~Client()
     
 }
 
-void Client::Init()
+bool Client::Init()
 {
     sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(sock == -1){
         LOGERR("error creating socket");
-        exit(-1);
+        return false;
     }
+    return true;
 }
 
-void Client::Connect(const std::string& ip, const int& port)
+bool Client::Connect(const std::string& ip, const int& port)
 {
     memset(&server_addr,0,sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     if(inet_pton(AF_INET, ip.c_str(), &server_addr.sin_addr) == -1){
         LOGERR("error inet_pton");
-        exit(-1);
+        return false;
 
     }
     socklen_t len = sizeof(server_addr);
 
     if(connect(sock, (struct sockaddr*)(&server_addr), len) == -1){
         LOGERR("error establishing connection to %s:%d, error: %d\n ", ip.c_str(), port, errno);
-        exit(-1);
+        return false;
     }
+
     LOGMSG("successfully established connection.\n");
+    return true;
 }
 
-void Client::Send(const char *send_buf, int len)
+bool Client::Send(const char *send_buf, int len)
 {
     int ret = send(sock, send_buf, len, 0);
     if(ret < 0){
         LOGERR("error sending control msg.\n");
-        exit(-1);
+        return false;
     }
+    return true;
 
 }
 
-void Client::Recv(char* recv_buf, int max_len, int& len)
+bool Client::Recv(char* recv_buf, int max_len, int& len)
 {
     int res = recv(sock, recv_buf,  max_len, 0);
     if(res == -1){
         LOGERR("error receiving.\n");
-        exit(-1);
+        return false;
     }
     else if(res == 0){
         LOGERR("server shut down.\n");
-        exit(0);
+        return true;
     }
     len = res;
+    return true;
 }
 
 int Client::SetSockNonBlocking()

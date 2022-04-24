@@ -14,10 +14,10 @@ class Client{
 public:
     Client();
     ~Client();
-    void Init();
-    void Connect(const std::string& ip, const int& port);
-    void Send(const char* send_buf, int len);
-    void Recv(char* recv_buf, int max_len, int& len);
+    bool Init();
+    bool Connect(const std::string& ip, const int& port);
+    bool Send(const char* send_buf, int len);
+    bool Recv(char* recv_buf, int max_len, int& len);
     int SetSockNonBlocking();
     void SetSockBlocking(int pre_flags);
     void Close();

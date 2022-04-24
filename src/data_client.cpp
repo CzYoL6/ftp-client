@@ -68,7 +68,7 @@ bool DataClient::RecvDir(char* dirs, int max_len, int &total_len)
     // Client::Recv(tmp_buf, 1024, len);
     int res = recv(Client::get_sock(), dirs, max_len, 0);
     if(res == 0){
-        LOGERR("server shut down the connection, file list transfer finished.");
+        LOGMSG("server shut down the connection, file list transfer finished.");
         //exit(0);
         return true;
     }
