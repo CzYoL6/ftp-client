@@ -15,6 +15,7 @@
 #define EXPECTED_RES_CODE_OPENCHANNEL            150
 #define EXPECTED_RES_CODE_TRANSFERFINISHED       226
 #define EXPECTED_RES_CODE_DELETE                 250
+#define EXPECTED_RES_CODE_CHANGEDIR              250
 
 
 class FtpClient{
@@ -28,6 +29,7 @@ public:
     bool                    DownloadFile(const std::string& file_path);
     bool                    DeleteFile(const std::string& file_path);
     bool                    Login(const std::string& username, const std::string& pwd);
+    bool                    ChangeDir(const std::string& dir_name);
     void                    Close();
 
 private:

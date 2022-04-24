@@ -25,6 +25,7 @@ public:
     bool                    DownloadFile(const std::string& file_path);
     bool                    DeleteFile(const std::string& file_path);
 	bool 					Login(const std::string& username, const std::string& pwd);
+	bool 					ChangeDir(const std::string& dir_name);
 	void 					Close();
 };
 
@@ -223,14 +224,24 @@ bool FtpClient::Impl::DeleteFile(const std::string& file_path)
     std::string del_cmd = "DELE ";
 	del_cmd.append(file_path).append("\r\n");
 
-	char recv[1024];
-	int res = 0;
 
-	p_cc->SendReq(del_cmd);
-	memset(recv,0 ,sizeof(recv));
-	p_cc->RecvResponse(EXPECTED_RES_CODE_DELETE);
+	if(!p_cc->SendReq(del_cmd)) return false;
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_DELETE)) return false;
 
 	LOGMSG("successfully deleted file %s", file_path.c_str());
+
+	return true;
+}
+
+bool FtpClient::Impl::ChangeDir(const std::string& dir_name){
+	std::string change_dir_cmd = "CWD ";
+	change_dir_cmd.append(dir_name).append("\r\n");
+
+	if(!p_cc->SendReq(change_dir_cmd)) return false;
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_CHANGEDIR)) return false;
+    LOGMSG("successfully switched to %s", dir_name.c_str());
+
+	return true;
 }
 
 
@@ -278,6 +289,11 @@ bool FtpClient::DeleteFile(const std::string& file_path)
 bool FtpClient::Login(const std::string& username, const std::string& pwd)
 {
 	return p_impl->Login(username, pwd);
+}
+
+bool FtpClient::ChangeDir(const std::string& dir_name)
+{
+	return p_impl->ChangeDir(dir_name);
 }
 
 void FtpClient::Close()
