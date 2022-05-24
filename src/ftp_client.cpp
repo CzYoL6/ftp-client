@@ -11,6 +11,7 @@
 class FtpClient::Impl{
 private:
     std::string ip;
+	std::string username;
     std::unique_ptr<ControlClient> p_cc;
     int GetPort(const char* s);
 
@@ -26,6 +27,9 @@ public:
     bool                    DeleteFile(const std::string& file_path);
 	bool 					Login(const std::string& username, const std::string& pwd);
 	bool 					ChangeDir(const std::string& dir_name);
+	bool					GetCWD(std::string* cwd);
+	std::string				GetIP();
+	std::string				GetUsername();
 	void 					Close();
 };
 
@@ -70,7 +74,9 @@ bool FtpClient::Impl::Login(const std::string& username, const std::string& pwd)
 
 	if(!p_cc->SendReq(pwd_cmd)) return false;
 	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_LOGIN_PASSWORD)) return false;
-
+	else{
+		this->username = username;
+	}
 	return true;
 }
 
@@ -86,6 +92,7 @@ bool FtpClient::Impl::Connect(const std::string& ip, int port)
 		RESPONSE_TYPE res;
 		p_cc->RecvResponse(EXPECTED_RES_CODE_CONNECTION_ESTABLISHED);
 	}
+	return true;
 }
 
 bool FtpClient::Impl::ListFile(std::string* files)
@@ -117,21 +124,24 @@ bool FtpClient::Impl::ListFile(std::string* files)
 	memset(dirs, 0, sizeof(dirs));
 	int total_len = 0;
 	while(!dc.RecvDir(dirs + total_len, sizeof(dirs) - total_len, total_len));
-
 	
 	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_TRANSFERFINISHED)) return false;
 
-	LOGMSG("File list: ");
-	printf("================================== file ================================\n");
-	printf(dirs);
-	printf("========================================================================\n");
-	printf("\n");
-
+	LOGMSG("%s%s%s", 
+		"File list: \n"
+		"================================== file ================================\n",
+		dirs,
+		"========================================================================\n"
+		"\n"
+	);
 	dc.Close();
 
+	
 	std::string dirs_str(dirs);
 
-	if(files) *files = dirs_str;
+	if(files) {
+		*files = dirs_str;
+	}
 
 	return true;
 }
@@ -244,6 +254,25 @@ bool FtpClient::Impl::ChangeDir(const std::string& dir_name){
 	return true;
 }
 
+std::string	FtpClient::Impl::GetIP(){
+	return ip;
+}
+
+std::string FtpClient::Impl::GetUsername(){
+	return username;
+}
+
+bool FtpClient::Impl::GetCWD(std::string* cwd){
+	//TODO
+	std::string print_dir_cmd = "PWD\r\n";
+
+	if(!p_cc->SendReq(print_dir_cmd)) return false;
+
+	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_PWD, cwd)) return false;
+    LOGMSG("current path %s", cwd->c_str());
+
+	return true;
+}
 
 FtpClient::FtpClient(){
     p_impl = std::make_unique<Impl>();
@@ -294,6 +323,18 @@ bool FtpClient::Login(const std::string& username, const std::string& pwd)
 bool FtpClient::ChangeDir(const std::string& dir_name)
 {
 	return p_impl->ChangeDir(dir_name);
+}
+
+std::string FtpClient::GetIP(){
+	return p_impl->GetIP();
+}
+
+std::string FtpClient::GetUsername(){
+	return p_impl->GetUsername();
+}
+
+bool FtpClient::GetCWD(std::string* cwd){
+	return p_impl->GetCWD(cwd);
 }
 
 void FtpClient::Close()

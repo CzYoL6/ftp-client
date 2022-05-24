@@ -31,7 +31,23 @@
 
 
 
+// pure console log:
+// #define PRINT(color, tag, format, arg...) do{printf(color " " tag NONE " " format, ## arg);}while(0)
+// #define LOGERR(msg, arg...) PRINT( RED, "[ ERROR ]",  "(%s:%d)   " msg " \n" , __FILE__, __LINE__, ## arg)
+// #define LOGMSG(msg, arg...) PRINT( GREEN, "[MESSAGE]", "(%s:%d)   " msg "\n"  , __FILE__, __LINE__, ## arg)
 
+//console + gui
+
+class ILogger{
+public:
+    virtual void AddLog(const char* fmt, ...) = 0;
+};
+
+extern ILogger* p_logger;
+#define PRINTGUI(format, arg...) do{ if(p_logger) p_logger->AddLog(format, ## arg); }while(0)
 #define PRINT(color, tag, format, arg...) do{printf(color " " tag NONE " " format, ## arg);}while(0)
-#define LOGERR(msg, arg...) PRINT( RED, "[ ERROR ]",  "(%s:%d)   " msg " \n" , __FILE__, __LINE__, ## arg)
-#define LOGMSG(msg, arg...) PRINT( GREEN, "[MESSAGE]", "(%s:%d)   " msg "\n"  , __FILE__, __LINE__, ## arg)
+#define LOGERR(msg, arg...) do{PRINTGUI(msg, ## arg) ; \
+                                        PRINT( RED, "[ ERROR ]",  "(%s:%d)   " msg " \n" , __FILE__, __LINE__, ## arg);}while(0)
+#define LOGMSG(msg, arg...) do{PRINTGUI(msg, ## arg) ; \
+                                        PRINT( GREEN, "[MESSAGE]", "(%s:%d)   " msg "\n"  , __FILE__, __LINE__, ## arg);}while(0)
+

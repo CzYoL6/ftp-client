@@ -2,35 +2,35 @@
 
 
 
-int main(int argc, char *argv[])
-{
+// int main(int argc, char *argv[])
+// {
 	
-	std::string ip = "192.168.225.128";
+// 	std::string ip = "192.168.225.128";
 	
-	FtpClient fc;
-	fc.Init();
-	fc.Connect(ip, 21);
-	fc.Login("ftptest", "T0KH3QTRKM");
+// 	FtpClient fc;
+// 	fc.Init();
+// 	fc.Connect(ip, 21);
+// 	fc.Login("ftptest", "T0KH3QTRKM");
 
-	getchar();
+// 	getchar();
 
-	std::string files;
-	fc.ListFile(&files);
+// 	std::string files;
+// 	fc.ListFile(&files);
 
-	getchar();
+// 	getchar();
 
-	fc.UploadFile("./imgui.ini");
+// 	fc.UploadFile("./imgui.ini");
 	
-	getchar();
+// 	getchar();
 
-	fc.DownloadFile("./新建文本文档.txt");
+// 	fc.DownloadFile("./新建文本文档.txt");
 
-	getchar();
+// 	getchar();
 
-	fc.DeleteFile("./新建文本文档2.txt");
+// 	fc.DeleteFile("./新建文本文档2.txt");
 
-	getchar();
+// 	getchar();
 
-	fc.Close();
+// 	fc.Close();
 
-}
+// }

@@ -57,7 +57,7 @@ bool DataClient::RecvData(std::fstream& stream, int& total_len)
         total_len += res;
         LOGMSG("received %d bytes, total %d bytes.", res, total_len);
         stream.write(tmp_buf, res);
-        return true;
+        return false;
     }
 }
 
