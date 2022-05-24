@@ -105,7 +105,7 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
-
+    io.Fonts->AddFontFromFileTTF("fonts/bb4171.ttf", 20.0f,NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
     //-----------------------------------------------------------------property-----------------------------------------
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -136,6 +136,12 @@ int main(int, char**)
 
                 ImGui::BeginChild("scrolling_remote_files", ImVec2(0, 200), true, ImGuiWindowFlags_HorizontalScrollbar);
                 fcg.ShowRomoteFiles();
+                ImGui::EndChild();
+
+                ImGui::Separator();
+
+                ImGui::BeginChild("scrolling_local_files", ImVec2(0, 200), true, ImGuiWindowFlags_HorizontalScrollbar);
+                fcg.ShowLocalFiles();
                 ImGui::EndChild();
 
                 ImGui::Separator();

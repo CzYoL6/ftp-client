@@ -28,12 +28,18 @@ public:
     ~FtpClientGUI();
 
     void                Init();
-    void                GetAllFiles();
     void                SetStyle();
 
+    //remote operations
+    void                GetAllFiles();
     void                ChangeDir(const std::string& wd);
     void                DownloadFile(const std::string& file_path);
+    void                UploadFile(const std::string& file_path);
     void                DeleteFile(const std::string& file_path);
+
+    //local operations
+    void                ListLocalFiles();
+    void                ChangeLocalDir(const std::string& wd);
 
     //draw GUI
     void                ShowLoginModal();

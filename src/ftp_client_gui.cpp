@@ -1,3 +1,5 @@
+#include <boost/filesystem.hpp>
+
 #include "../include/ftp_client_gui.h"
 #include "../include/ftp_client.h"
 #include "../include/logger.h"
@@ -19,13 +21,14 @@ struct FtpClientGUI::File{
     //show GUI
     //return true if a folder is open, the file list needs refreshing.
     //return false if no folder is open, the file list stay unchanged.
-    bool DisplayInTable(FtpClientGUI& ftpClientGUI){
-        ImGui::PushID(ID);
+    bool DisplayInTable(FtpClientGUI& ftpClientGUI, bool remote = false){
 
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
         const bool is_folder = is_dir;
         
+        bool need_refresh = false;
+
         if (is_folder){
             ImGui::BulletText(this->name.c_str());
 
@@ -36,15 +39,42 @@ struct FtpClientGUI::File{
 
             ImGui::TableNextColumn();
 
-            if(ImGui::Button("open")){
-                //change dir and print wd
-                ftpClientGUI.ChangeDir(this->name);
-                //get files
-                ftpClientGUI.GetAllFiles();
+            if(remote){
 
+                char Id[50];
+                memset(Id, 0, sizeof(Id));
+                const char* id = "remote open";
+                sprintf(Id, "%s %d", id, ID);
+
+                ImGui::PushID(Id);
+                if(ImGui::Button("open")){
+                    //change dir and print wd
+                    ftpClientGUI.ChangeDir(this->name);
+                    //get files
+                    ftpClientGUI.GetAllFiles();
+
+                    need_refresh = true;
+                }
                 ImGui::PopID();
-                return true;
+
             }
+            else{
+                char Id[50];
+                memset(Id, 0, sizeof(Id));
+                const char* id = "local open";
+                sprintf(Id, "%s %d", id, ID);
+
+                ImGui::PushID(Id);
+                if(ImGui::Button("open")){
+                    //change dir and print wd
+                    ftpClientGUI.ChangeLocalDir(this->name);
+                    //get files
+                    ftpClientGUI.ListLocalFiles();
+
+                    need_refresh = true;
+                }
+                ImGui::PopID();
+            } 
         }
         else{
             ImGui::BulletText(this->name.c_str());
@@ -55,22 +85,62 @@ struct FtpClientGUI::File{
             
             ImGui::TableNextColumn();
 
-            if(ImGui::Button("download")){
-                ftpClientGUI.DownloadFile(this->name);
-                //show dialog
-            }
-            ImGui::SameLine();
+            if(remote){
+                
+                {
+                    char Id[50];
+                    memset(Id, 0, sizeof(Id));
+                    const char* id = "remote download";
+                    sprintf(Id, "%s %d", id, ID);
 
-            if(ImGui::Button("delete")){
-                ftpClientGUI.DeleteFile(this->name);
-                //get files
-                ftpClientGUI.GetAllFiles();
-                //show dialog
+                    ImGui::PushID(Id);
+
+                    if(ImGui::Button("download")){
+                        ftpClientGUI.DownloadFile(this->name);
+                        //show dialog
+                    }
+
+                    ImGui::PopID();
+                }
+
+                ImGui::SameLine();
+
+                {
+                    char Id[50];
+                    memset(Id, 0, sizeof(Id));
+                    const char* id = "remote delete";
+                    sprintf(Id, "%s %d", id, ID);
+
+                    ImGui::PushID(Id);
+                    if(ImGui::Button("delete")){
+                        ftpClientGUI.DeleteFile(this->name);
+                        //get files
+                        ftpClientGUI.GetAllFiles();
+                        //show dialog
+                    }
+
+                    ImGui::PopID();
+                }
+
+            }
+            else{
+
+                char Id[50];
+                memset(Id, 0, sizeof(Id));
+                const char* id = "local upload";
+                sprintf(Id, "%s %d", id, ID);
+
+                ImGui::PushID(Id);
+
+                if(ImGui::Button("upload")){
+                    ftpClientGUI.UploadFile(this->name);
+                    //show dialog
+                }
+
+                ImGui::PopID();
             }
         }
-
-        ImGui::PopID();
-        return false;
+        return need_refresh;
     }
 };
 
@@ -85,16 +155,23 @@ public:
 
     void                                Init();
     //parse the file string got from the client, and store them in vector 'file_list_of_cur_dir'
-    void                                GetAllFiles(); 
     void                                SetStyle(); 
 
+    //remote operations
+    void                                GetAllFiles(); 
     void                                ChangeDir(const std::string& wd);
     void                                DownloadFile(const std::string& file_path);
+    void                                UploadFile(const std::string& file_path);
     void                                DeleteFile(const std::string& file_path);
+
+    //local operations
+    void                                ListLocalFiles();
+    void                                ChangeLocalDir(const std::string& wd);
+
     //draw UI
     void                                ShowLoginModal();
     void                                ShowUserInfoBar();
-    void                                ShowLocalFiles();
+    void                                ShowLocalFiles(FtpClientGUI& ftpClientGUI);
     void                                ShowRomoteFiles(FtpClientGUI& ftpClientGUI);
     void                                ShowLog();
 
@@ -102,6 +179,13 @@ private:
     std::vector<FtpClientGUI::File> file_list_of_cur_dir;
     std::unique_ptr<FtpClient> p_fc;
     std::string cwd;
+
+    std::vector<FtpClientGUI::File> local_file_list_of_cur_dir;
+    std::string local_cwd;
+
+    void                                ListTopLevelFiles(const boost::filesystem::path& directoryPath, 
+                                                            std::vector<File>* topLevelFiles) ;
+    void                                ShowModal(const std::string&& msg);
 
 public:
     class Logger : public ILogger{
@@ -134,9 +218,9 @@ public:
         }
 
         void    Draw(const char* title, bool* p_open = NULL){
-            ImGui::Text("Log"); ImGui::SameLine(); 
+            ImGui::Text(title); ImGui::SameLine(); 
             HelpMarker(
-                "Detailed log of what's happening.");
+                "操作执行的细节.");
 
             // Options menu
             if (ImGui::BeginPopup("Options")){
@@ -148,9 +232,9 @@ public:
             if (ImGui::Button("Options"))
                 ImGui::OpenPopup("Options");
             ImGui::SameLine();
-            bool clear = ImGui::Button("Clear");
+            bool clear = ImGui::Button("清空");
             ImGui::SameLine();
-            bool copy = ImGui::Button("Copy");
+            bool copy = ImGui::Button("复制");
             ImGui::SameLine();
             Filter.Draw("Filter", -100.0f);
 
@@ -227,9 +311,21 @@ void FtpClientGUI::DownloadFile(const std::string& file_path){
     p_impl->DownloadFile(file_path);
 }
 
+void FtpClientGUI::UploadFile(const std::string& file_path){
+    p_impl->UploadFile(file_path);
+}
+
 void FtpClientGUI::DeleteFile(const std::string& file_path){
     p_impl->DeleteFile(file_path);
 }
+
+void FtpClientGUI::ChangeLocalDir(const std::string& wd){
+    p_impl->ChangeLocalDir(wd);
+}
+
+void FtpClientGUI::ListLocalFiles(){
+    p_impl->ListLocalFiles();
+} 
 
 void FtpClientGUI::ShowRomoteFiles(){
     p_impl->ShowRomoteFiles(*this);
@@ -253,7 +349,7 @@ void FtpClientGUI::ShowUserInfoBar()
 
 void FtpClientGUI::ShowLocalFiles()
 {
-    p_impl->ShowLocalFiles();
+    p_impl->ShowLocalFiles(*this);
 }
 
 FtpClientGUI::Impl::Impl(){
@@ -264,6 +360,19 @@ FtpClientGUI::Impl::~Impl(){
 
 }
 
+void FtpClientGUI::Impl::ShowModal(const std::string&& msg){
+    ImGui::OpenPopup("modal");
+
+    bool unused_open = true;
+    if (ImGui::BeginPopupModal("modal", &unused_open))
+    {
+        ImGui::Text(msg.c_str());
+        if (ImGui::Button("Close"))
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+}
+
 void FtpClientGUI::Impl::ChangeDir(const std::string& wd){
     if(!p_fc->ChangeDir(wd)){
         //show dialog
@@ -271,9 +380,13 @@ void FtpClientGUI::Impl::ChangeDir(const std::string& wd){
     if(!p_fc->GetCWD(&this->cwd)){
         //show dialog
     }
+        ShowModal("进入目录成功！");
 }
 
 void FtpClientGUI::Impl::Init(){
+    local_cwd = boost::filesystem::current_path().string();
+    ListLocalFiles();
+
     //set the gui logger pointer
     logger = std::make_unique<Logger>();
     p_logger = logger.get();
@@ -300,6 +413,12 @@ void FtpClientGUI::Impl::Init(){
 
 void FtpClientGUI::Impl::DownloadFile(const std::string& file_path){
     if(!p_fc->DownloadFile(file_path)){
+        //show dialog
+    }
+}
+
+void FtpClientGUI::Impl::UploadFile(const std::string& file_path){
+    if(!p_fc->UploadFile(file_path)){
         //show dialog
     }
 }
@@ -352,16 +471,18 @@ void FtpClientGUI::Impl::GetAllFiles(){
 }
 
 void FtpClientGUI::Impl::ShowRomoteFiles(FtpClientGUI& ftpClientGUI){
-    ImGui::Text("RemoteFiles"); ImGui::SameLine(); 
+    ImGui::Text("远端文件"); ImGui::SameLine(); 
     HelpMarker(
-        "all files and directories on the remote side.\n"
-        "right click to operate on them.");
+        "服务器的文件，从本地上传的文件会保存在这里.\n");
 
-    ImGui::Text("Current Path: %s", cwd.c_str());
+    ImGui::Text("当前目录: %s", cwd.c_str());
     ImGui::SameLine();
-    if(ImGui::Button("refresh")){
+
+    ImGui::PushID("refresh_button_remote");
+    if(ImGui::Button("刷新")){
         ftpClientGUI.GetAllFiles();
     }
+    ImGui::PopID();
 
     const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
     const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
@@ -371,21 +492,40 @@ void FtpClientGUI::Impl::ShowRomoteFiles(FtpClientGUI& ftpClientGUI){
     if (ImGui::BeginTable("4ways", 4, flags))
     {
         // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
-        ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0f);
-        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
-        ImGui::TableSetupColumn("Operation", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
+        ImGui::TableSetupColumn("文件名", ImGuiTableColumnFlags_NoHide);
+        ImGui::TableSetupColumn("类型", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
+        ImGui::TableSetupColumn("操作", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
         ImGui::TableHeadersRow();
 
 
         for(auto file : file_list_of_cur_dir){
             //if file list changes, then break and draw next time.
-            if(file.DisplayInTable(ftpClientGUI)) break;
+            if(file.DisplayInTable(ftpClientGUI, true)) break;
         }
         ImGui::EndTable();
     }
 }
  
+void FtpClientGUI::Impl::ListTopLevelFiles(const boost::filesystem::path& directoryPath, std::vector<File>* topLevelFiles) {
+    topLevelFiles->clear();
+    if (!exists(directoryPath))
+        return;
+
+    File DotDotFolder;
+    DotDotFolder.name = "..";
+    DotDotFolder.is_dir = true;
+    topLevelFiles->push_back(DotDotFolder);
+
+    //non-recursive directory iterator
+    boost::filesystem::directory_iterator end_itr;
+    for (boost::filesystem::directory_iterator itr(directoryPath); itr != end_itr; ++itr) {
+        File file;
+        file.name = itr->path().filename().string();
+        file.is_dir = boost::filesystem::is_directory(itr->status());
+        topLevelFiles->push_back(file);
+    }
+}
+
 void FtpClientGUI::Impl::SetStyle(){
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_WindowBg] = ImColor(30,30,30,255);
@@ -393,33 +533,75 @@ void FtpClientGUI::Impl::SetStyle(){
     style.Colors[ImGuiCol_TitleBgActive] = ImColor(255,106,106,255);
 }
 
+void FtpClientGUI::Impl::ChangeLocalDir(const std::string& wd){
+    boost::filesystem::current_path(boost::filesystem::current_path() / wd);
+    local_cwd = boost::filesystem::current_path().string();
+}
+
+void FtpClientGUI::Impl::ListLocalFiles(){
+    local_file_list_of_cur_dir.clear();
+    ListTopLevelFiles(local_cwd, &local_file_list_of_cur_dir);
+} 
+
 void FtpClientGUI::Impl::ShowLog()
 {
     // ImGui::Text("Log"); ImGui::SameLine(); 
     // HelpMarker(
     //     "Detailed log of what's happening.");
-    logger->Draw("Log");
+    logger->Draw("日志");
 
 }
 
 
 void FtpClientGUI::Impl::ShowLoginModal()
 {
-    
+    //TODO
 }
 
 void FtpClientGUI::Impl::ShowUserInfoBar()
 {
-    ImGui::Text("host: %s", p_fc->GetIP().c_str());
+    ImGui::Text("主机: %s", p_fc->GetIP().c_str());
     ImGui::SameLine();
-    ImGui::Text("username: %s", p_fc->GetUsername().c_str());
+    ImGui::Text("用户名: %s", p_fc->GetUsername().c_str());
 
 }
 
-void FtpClientGUI::Impl::ShowLocalFiles()
-{
-    
+void FtpClientGUI::Impl::ShowLocalFiles(FtpClientGUI& ftpClientGUI){
+    ImGui::Text("本地文件"); ImGui::SameLine(); 
+    HelpMarker(
+        "本地的所有文件，从远端下载的文件会保存在这里.\n");
+
+    ImGui::Text("当前目录: %s", local_cwd.c_str());
+    ImGui::SameLine();
+
+    ImGui::PushID("refresh_button_local");
+    if(ImGui::Button("刷新")){
+        ftpClientGUI.ListLocalFiles();
+    }
+    ImGui::PopID();
+
+    const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
+    const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+
+    static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
+
+    if (ImGui::BeginTable("4ways", 4, flags))
+    {
+        // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
+        ImGui::TableSetupColumn("文件名", ImGuiTableColumnFlags_NoHide);
+        ImGui::TableSetupColumn("类型", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
+        ImGui::TableSetupColumn("操作", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
+        ImGui::TableHeadersRow();
+
+
+        for(auto file : local_file_list_of_cur_dir){
+            //if file list changes, then break and draw next time.
+            if(file.DisplayInTable(ftpClientGUI, false)) break;
+        }
+        ImGui::EndTable();
+    }
 }
+
 
 void HelpMarker(const char* desc)
 {
