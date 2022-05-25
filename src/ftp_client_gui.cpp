@@ -1,8 +1,11 @@
 #include <boost/filesystem.hpp>
+#include <boost/locale.hpp>
+#include <codecvt>
 
 #include "../include/ftp_client_gui.h"
 #include "../include/ftp_client.h"
 #include "../include/logger.h"
+
 
 struct FtpClientGUI::File{
     bool        is_dir;
@@ -410,6 +413,16 @@ void FtpClientGUI::Impl::ChangeDir(const std::string& wd){
 }
 
 void FtpClientGUI::Impl::Init(){
+    //boost::filesystem::path::imbue(std::locale( std::locale(), new std::codecvt_utf8_utf16<wchar_t>() ) );
+
+    // Get the default locale
+    std::locale loc = boost::locale::generator().generate("");
+    // Set the global locale to loc
+    std::locale::global(loc);
+    // Make boost.filesystem use it by default
+    boost::filesystem::path::imbue(std::locale());
+
+
     local_cwd = boost::filesystem::current_path().string();
     ListLocalFiles();
 
@@ -500,7 +513,12 @@ void FtpClientGUI::Impl::GetAllFiles(){
 
             File new_file;
             new_file.is_dir = is_folder;
+
             new_file.name = meta_list[FILENAME_INDEX];
+            //in case there are spaces in names
+            for(int i = FILENAME_INDEX + 1; i < meta_list.size(); i++){
+                new_file.name.append(" ").append(meta_list[i]);
+            }
             file_list.push_back(new_file);
 
             meta_list.clear();

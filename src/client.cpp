@@ -18,7 +18,7 @@ bool Client::Init()
     _sock_init();
     sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(sock == _invalid_socket){
-        LOGERR("error creating socket");
+        LOGERR("error creating socket\n");
         return false;
     }
     return true;
@@ -42,7 +42,7 @@ bool Client::Connect(const std::string& ip, const int& port)
         return false;
     }
 
-    LOGMSG("successfully established connection.\n");
+    LOGMSG("successfully established connection.\n\n");
     return true;
 }
 

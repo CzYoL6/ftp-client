@@ -184,7 +184,7 @@ bool FtpClient::Impl::UploadFile(const std::string& file_path)
 	stream.seekg(0, stream.end);
 	int left_to_send = stream.tellg();
 	stream.seekg(0, stream.beg);
-	LOGMSG("starting to transfer file (%d bytes)", left_to_send);
+	LOGMSG("starting to transfer file (%d bytes)\n\n", left_to_send);
 	while(left_to_send){
 		if(!dc.SendData(stream, left_to_send)) return false;
 	}
@@ -194,7 +194,7 @@ bool FtpClient::Impl::UploadFile(const std::string& file_path)
 	
 	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_TRANSFERFINISHED)) return false;
 	
-	LOGMSG("file %s successfully sent.\n", file_path.c_str());
+	LOGMSG("file %s successfully sent.\n\n", file_path.c_str());
 
 	return true;
 
@@ -234,7 +234,7 @@ bool FtpClient::Impl::DownloadFile(const std::string& file_path)
 	
 	stream.close();
 
-	LOGMSG("file %s successfully received.\n", file_path.c_str());
+	LOGMSG("file %s successfully received.\n\n", file_path.c_str());
 
 	return true;
 }
@@ -248,7 +248,7 @@ bool FtpClient::Impl::_DeleteFile(const std::string& file_path)
 	if(!p_cc->SendReq(del_cmd)) return false;
 	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_DELETE)) return false;
 
-	LOGMSG("successfully deleted file %s", file_path.c_str());
+	LOGMSG("successfully deleted file %s\n\n", file_path.c_str());
 
 	return true;
 }
@@ -259,7 +259,7 @@ bool FtpClient::Impl::ChangeDir(const std::string& dir_name){
 
 	if(!p_cc->SendReq(change_dir_cmd)) return false;
 	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_CHANGEDIR)) return false;
-    LOGMSG("successfully switched to %s", dir_name.c_str());
+    LOGMSG("successfully switched to %s\n\n", dir_name.c_str());
 
 	return true;
 }
@@ -279,7 +279,7 @@ bool FtpClient::Impl::GetCWD(std::string* cwd){
 	if(!p_cc->SendReq(print_dir_cmd)) return false;
 
 	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_PWD, cwd)) return false;
-    LOGMSG("current path %s", cwd->c_str());
+    LOGMSG("current path %s\n\n", cwd->c_str());
 
 	return true;
 }

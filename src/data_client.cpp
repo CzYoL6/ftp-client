@@ -68,17 +68,17 @@ bool DataClient::RecvDir(char* dirs, int max_len, int &total_len)
     // Client::Recv(tmp_buf, 1024, len);
     int res = recv(Client::get_sock(), dirs, max_len, 0);
     if(res == 0){
-        LOGMSG("server shut down the connection, file list transfer finished.");
+        LOGMSG("server shut down the connection, file list transfer finished.\n\n");
         //exit(0);
         return true;
     }
     else if(res == _sock_error){
-        LOGERR("error receiving data.");
+        LOGERR("error receiving data.\n\n");
         exit(-1);
     }
     else {
         total_len += res;
-        LOGMSG("received %d bytes", res);
+        LOGMSG("received %d bytes\n\n", res);
         return false;
     
     }

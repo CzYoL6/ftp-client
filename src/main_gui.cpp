@@ -33,7 +33,6 @@ static void glfw_error_callback(int error, const char* description)
 
 ILogger* p_logger{nullptr};
 
-
 int main(int, char**)
 {
     // Setup window
@@ -64,13 +63,17 @@ int main(int, char**)
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 
     //custom, to make the bg window transparent
-    //glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-    //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Ftp Client v0.1", NULL, NULL);
+    //GLFWwindow* window = glfwCreateWindow(1280, 720, "Ftp Client v0.1", NULL, NULL);
+    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    GLFWwindow* window = glfwCreateWindow(mode->width * 0.999, mode->height *0.999 , "Ftp Client v0.1", NULL, NULL);
+
+
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
@@ -105,16 +108,19 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
-    io.Fonts->AddFontFromFileTTF("fonts/bb4171.ttf", 20.0f,NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+    io.Fonts->AddFontFromFileTTF("fonts/bb4171.ttf", 20.0f,NULL, io.Fonts->GetGlyphRangesChineseFull());
 
     //-----------------------------------------------------------------property-----------------------------------------
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    //ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 0.00f);
 
     //-----------------------------------------------------------------our data-----------------------------------------
 
     FtpClientGUI fcg;
 
     //-------------------------------------------------------------------------------------------------------------------
+
+    bool open = true;
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -126,8 +132,10 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         fcg.SetStyle();
+        
         {
-                if(ImGui::Begin("FtpClient", nullptr, ImGuiWindowFlags_NoCollapse)){
+            // if(ImGui::Begin("FtpClient", nullptr, ImGuiWindowFlags_NoCollapse)){
+            if(ImGui::Begin("FtpClient", &open, ImGuiWindowFlags_NoCollapse)){
                 
                 //open modal in this way(keep OpenPopup and BeginPopupModal in the same ID stack)
                 if(fcg.showing_modal()){
@@ -172,6 +180,8 @@ int main(int, char**)
 
                 ImGui::End();
             }
+
+            if(!open) break;
         }
     
         // Rendering
@@ -181,8 +191,9 @@ int main(int, char**)
         glViewport(0, 0, display_w, display_h);
         //glClearColor(0,0,0,0);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-        // glClear(GL_COLOR_BUFFER_BIT);
+       // glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);

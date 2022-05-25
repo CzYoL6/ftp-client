@@ -12,4 +12,4 @@ link_directories(${CMAKE_SOURCE_DIR}/lib)
 
 add_executable(ftp_client ${SRC})
 
-target_link_libraries(${PROJECT_NAME} opengl32  libboost_filesystem-mgw6-mt-x32-1_79.a libglfw3dll.a ws2_32 wsock32)
+target_link_libraries(${PROJECT_NAME} opengl32  libboost_filesystem-mgw6-mt-x32-1_79.a  libboost_locale-mgw6-mt-x32-1_79.a libglfw3dll.a  ws2_32 wsock32)

@@ -31,11 +31,11 @@ bool ControlClient::RecvResponse(int expected_code, std::string *msg)
     
     if(!Client::Recv(recv_buf, RECVBUF_SZE, recv_cnt)) return false;
     
-    LOGMSG("received %d bytes: %s\n", recv_cnt, recv_buf);
+    //LOGMSG("received %d bytes: %s\n\n", recv_cnt, recv_buf);
 
     RESPONSE_TYPE res = DecodeResponse(recv_buf);
 
-    LOGMSG("response code: %d, res msg: %s \n", res.first, res.second.c_str());
+    LOGMSG("response code: %d, res msg: %s \n\n", res.first, res.second.c_str());
 
     if(msg) *msg = res.second;
 
@@ -58,4 +58,17 @@ RESPONSE_TYPE ControlClient::DecodeResponse(const char *s)
     //std::cout << "split res: " << res_code << " " << res_msg.c_str() << std::endl;
 
     return std::make_pair(res_code, s_str);
+}
+
+bool ControlClient::HasMoreResponse(){
+    return !res_queue.empty();
+}
+
+RESPONSE_TYPE ControlClient::PopResponse(){
+    RESPONSE_TYPE r = res_queue.front();
+    res_queue.pop();
+}
+
+void ControlClient::PushResponse(const RESPONSE_TYPE& res){
+    res_queue.push(res);
 }
