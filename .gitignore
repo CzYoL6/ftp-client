@@ -2,3 +2,4 @@
 
 imgui.ini
 *.a
+.vscode/settings.json
