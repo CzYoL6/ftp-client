@@ -129,13 +129,13 @@ int main(int, char**)
         {
                 if(ImGui::Begin("FtpClient", nullptr, ImGuiWindowFlags_NoCollapse)){
                 
+                //open modal in this way(keep OpenPopup and BeginPopupModal in the same ID stack)
                 if(fcg.showing_modal()){
                     fcg.HideModal();
                     ImGui::OpenPopup("modal");
                 }
                 fcg.PrepareModal();
-
-                if(ImGui::Button("!!")) fcg.ShowModal("!!");
+                //-------------------------------------------------------------------------------
 
                 if(!fcg.inited()) fcg.Init();
 
@@ -143,19 +143,28 @@ int main(int, char**)
 
                 ImGui::Separator();
 
-                ImGui::BeginChild("scrolling_remote_files", ImVec2(0, 200), true, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::BeginChild("scrolling_remote_files", 
+                                    ImVec2(ImGui::GetWindowContentRegionWidth() / 2, (ImGui::GetWindowHeight() - 20)* 2 / 3), 
+                                    true, 
+                                    ImGuiWindowFlags_HorizontalScrollbar);
                 fcg.ShowRomoteFiles();
                 ImGui::EndChild();
 
-                ImGui::Separator();
+                ImGui::SameLine();
 
-                ImGui::BeginChild("scrolling_local_files", ImVec2(0, 200), true, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::BeginChild("scrolling_local_files", 
+                                    ImVec2(ImGui::GetWindowContentRegionWidth() / 2, (ImGui::GetWindowHeight() - 20) * 2 / 3), 
+                                    true, 
+                                    ImGuiWindowFlags_HorizontalScrollbar);
                 fcg.ShowLocalFiles();
                 ImGui::EndChild();
 
                 ImGui::Separator();
 
-                ImGui::BeginChild("scrolling_log", ImVec2(0, 200), true, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::BeginChild("scrolling_log", 
+                                    ImVec2(0.0f, 0.0f), 
+                                    true, 
+                                    ImGuiWindowFlags_HorizontalScrollbar);
                 fcg.ShowLog();
                 ImGui::EndChild();
 

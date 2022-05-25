@@ -92,6 +92,9 @@ struct FtpClientGUI::File{
 
                     if(ImGui::Button("download")){
                         ftpClientGUI.DownloadFile(this->name);
+
+                        //refresh
+                        ftpClientGUI.ListLocalFiles();
                     }
 
                     ImGui::PopID();
@@ -108,7 +111,8 @@ struct FtpClientGUI::File{
                     ImGui::PushID(Id);
                     if(ImGui::Button("delete")){
                         ftpClientGUI.DeleteFile(this->name);
-                        //get files
+
+                        //refresh
                         ftpClientGUI.GetAllFiles();
                     }
 
@@ -127,6 +131,9 @@ struct FtpClientGUI::File{
 
                 if(ImGui::Button("upload")){
                     ftpClientGUI.UploadFile(this->name);
+
+                    //refresh
+                    ftpClientGUI.GetAllFiles();
                 }
 
                 ImGui::PopID();
@@ -438,7 +445,7 @@ void FtpClientGUI::Impl::DownloadFile(const std::string& file_path){
         //show dialog
         this->ShowModal("下载失败！");
     }
-    this->ShowModal("下载成功！");
+    else this->ShowModal("下载成功！");
 }
 
 void FtpClientGUI::Impl::UploadFile(const std::string& file_path){
@@ -446,7 +453,7 @@ void FtpClientGUI::Impl::UploadFile(const std::string& file_path){
         //show dialog
         this->ShowModal("上传失败！");
     }
-    this->ShowModal("上传成功！");
+    else this->ShowModal("上传成功！");
 }
 
 void FtpClientGUI::Impl::DeleteFile(const std::string& file_path){
@@ -454,7 +461,7 @@ void FtpClientGUI::Impl::DeleteFile(const std::string& file_path){
         //show dialog
         this->ShowModal("删除失败！");
     }
-    this->ShowModal("删除成功！");
+    else this->ShowModal("删除成功！");
 }
 
 void FtpClientGUI::Impl::GetAllFiles(){ 
@@ -612,6 +619,7 @@ void FtpClientGUI::Impl::ShowUserInfoBar()
     ImGui::SameLine();
     ImGui::Text("用户名: %s", p_fc->GetUsername().c_str());
 
+    ImGui::Text("模式: 被动模式");
 }
 
 void FtpClientGUI::Impl::ShowLocalFiles(FtpClientGUI& ftpClientGUI){
