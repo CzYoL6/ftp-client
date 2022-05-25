@@ -20,6 +20,7 @@ public:
     ~Impl();
 
     bool                    Init();
+	bool					inited();
     bool                    Connect(const std::string& ip, int port);
     bool  			        ListFile(std::string* files);
     bool                    UploadFile(const std::string& file_path);
@@ -31,6 +32,9 @@ public:
 	std::string				GetIP();
 	std::string				GetUsername();
 	void 					Close();
+
+private:
+	bool b_inited{false};
 };
 
 FtpClient::Impl::Impl()
@@ -55,7 +59,12 @@ int FtpClient::Impl::GetPort(const char* s){
 bool FtpClient::Impl::Init()
 {
     if(!p_cc->Init()) return false;
+	b_inited = true;
     return true;
+}
+
+bool FtpClient::Impl::inited(){
+	return b_inited;
 }
 
 void FtpClient::Impl::Close(){
@@ -287,6 +296,10 @@ bool FtpClient::Init()
 {
     if(!p_impl->Init()) return false;
     return true;
+}
+
+bool FtpClient::inited(){
+	return p_impl->inited();
 }
 
 bool FtpClient::Connect(const std::string& ip, int port)

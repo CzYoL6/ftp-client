@@ -31,9 +31,6 @@ struct FtpClientGUI::File{
 
         if (is_folder){
             ImGui::BulletText(this->name.c_str());
-
-            ImGui::TableNextColumn();
-            ImGui::TextDisabled("--");
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("Folder");
 
@@ -79,8 +76,6 @@ struct FtpClientGUI::File{
         else{
             ImGui::BulletText(this->name.c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("%d", 0);
-            ImGui::TableNextColumn();
             ImGui::TextUnformatted("File");
             
             ImGui::TableNextColumn();
@@ -97,7 +92,6 @@ struct FtpClientGUI::File{
 
                     if(ImGui::Button("download")){
                         ftpClientGUI.DownloadFile(this->name);
-                        //show dialog
                     }
 
                     ImGui::PopID();
@@ -116,7 +110,6 @@ struct FtpClientGUI::File{
                         ftpClientGUI.DeleteFile(this->name);
                         //get files
                         ftpClientGUI.GetAllFiles();
-                        //show dialog
                     }
 
                     ImGui::PopID();
@@ -134,7 +127,6 @@ struct FtpClientGUI::File{
 
                 if(ImGui::Button("upload")){
                     ftpClientGUI.UploadFile(this->name);
-                    //show dialog
                 }
 
                 ImGui::PopID();
@@ -154,8 +146,11 @@ public:
     ~Impl();
 
     void                                Init();
+    bool                                inited();
     //parse the file string got from the client, and store them in vector 'file_list_of_cur_dir'
     void                                SetStyle(); 
+    bool                                showing_modal();
+    void                                HideModal();
 
     //remote operations
     void                                GetAllFiles(); 
@@ -174,6 +169,8 @@ public:
     void                                ShowLocalFiles(FtpClientGUI& ftpClientGUI);
     void                                ShowRomoteFiles(FtpClientGUI& ftpClientGUI);
     void                                ShowLog();
+    void                                ShowModal(const char* msg);
+    void                                PrepareModal();
 
 private:
     std::vector<FtpClientGUI::File> file_list_of_cur_dir;
@@ -185,7 +182,10 @@ private:
 
     void                                ListTopLevelFiles(const boost::filesystem::path& directoryPath, 
                                                             std::vector<File>* topLevelFiles) ;
-    void                                ShowModal(const std::string&& msg);
+
+    const char* modal_msg;
+
+    bool b_showing_modal{false};
 
 public:
     class Logger : public ILogger{
@@ -295,12 +295,24 @@ void FtpClientGUI::Init(){
     p_impl->Init();
 }
 
+bool FtpClientGUI::inited(){
+    return p_impl->inited();
+}
+
 void FtpClientGUI::GetAllFiles(){
     p_impl->GetAllFiles();
 }
 
 void FtpClientGUI::SetStyle(){
     p_impl->SetStyle();
+}
+
+bool FtpClientGUI::showing_modal(){
+    return p_impl->showing_modal();
+}
+
+void FtpClientGUI::HideModal(){
+    p_impl->HideModal();
 }
 
 void FtpClientGUI::ChangeDir(const std::string& wd){
@@ -352,6 +364,14 @@ void FtpClientGUI::ShowLocalFiles()
     p_impl->ShowLocalFiles(*this);
 }
 
+void FtpClientGUI::ShowModal(const char* msg){
+    p_impl->ShowModal(msg);
+}
+
+void FtpClientGUI::PrepareModal(){
+    p_impl->PrepareModal();
+}
+
 FtpClientGUI::Impl::Impl(){
     p_fc = std::make_unique<FtpClient>();
 }
@@ -360,17 +380,17 @@ FtpClientGUI::Impl::~Impl(){
 
 }
 
-void FtpClientGUI::Impl::ShowModal(const std::string&& msg){
-    ImGui::OpenPopup("modal");
+bool FtpClientGUI::Impl::inited(){
+    return p_fc->inited();
+}
 
-    bool unused_open = true;
-    if (ImGui::BeginPopupModal("modal", &unused_open))
-    {
-        ImGui::Text(msg.c_str());
-        if (ImGui::Button("Close"))
-            ImGui::CloseCurrentPopup();
-        ImGui::EndPopup();
-    }
+inline void FtpClientGUI::Impl::ShowModal(const char* msg){
+    modal_msg = msg;
+    b_showing_modal = true;
+}
+
+void FtpClientGUI::Impl::HideModal(){
+    b_showing_modal = false;
 }
 
 void FtpClientGUI::Impl::ChangeDir(const std::string& wd){
@@ -380,7 +400,6 @@ void FtpClientGUI::Impl::ChangeDir(const std::string& wd){
     if(!p_fc->GetCWD(&this->cwd)){
         //show dialog
     }
-        ShowModal("进入目录成功！");
 }
 
 void FtpClientGUI::Impl::Init(){
@@ -395,17 +414,20 @@ void FtpClientGUI::Impl::Init(){
 	
 	if(!p_fc->Init()){
         //show dialog
+        ShowModal("初始化失败！");
     }
     if(!p_fc->Connect(ip, 21)){
         //show dialog
+        ShowModal("连接服务器失败！");
     }
     if(!p_fc->Login("ftptest", "T0KH3QTRKM")){
         //show dialog
+        ShowModal("登录失败！");
     }
     if(!p_fc->GetCWD(&(this->cwd))){
         //show dialog
+        ShowModal("获取当前路径失败！");
     }
-
     GetAllFiles();
 
 
@@ -414,34 +436,44 @@ void FtpClientGUI::Impl::Init(){
 void FtpClientGUI::Impl::DownloadFile(const std::string& file_path){
     if(!p_fc->DownloadFile(file_path)){
         //show dialog
+        this->ShowModal("下载失败！");
     }
+    this->ShowModal("下载成功！");
 }
 
 void FtpClientGUI::Impl::UploadFile(const std::string& file_path){
     if(!p_fc->UploadFile(file_path)){
         //show dialog
+        this->ShowModal("上传失败！");
     }
+    this->ShowModal("上传成功！");
 }
 
 void FtpClientGUI::Impl::DeleteFile(const std::string& file_path){
     if(!p_fc->DeleteFile(file_path)){
         //show dialog
+        this->ShowModal("删除失败！");
     }
+    this->ShowModal("删除成功！");
 }
 
-void FtpClientGUI::Impl::GetAllFiles(){
+void FtpClientGUI::Impl::GetAllFiles(){ 
+    std::vector<File> &file_list = file_list_of_cur_dir;
+    file_list.clear();
+    
     std::string files;
     if(!p_fc->ListFile(&files)){
         //show dialog
+        ShowModal("获取文件列表失败！");
+        return;
     }
 
     std::vector<std::string> file_list_strs;
     std::vector<std::string> meta_list;
-    std::vector<File> &file_list = file_list_of_cur_dir;
     file_list_strs.clear();
     meta_list.clear();
 
-    file_list.clear();
+   
     //add .. to the file list
 
     File DotDotFolder;
@@ -489,7 +521,7 @@ void FtpClientGUI::Impl::ShowRomoteFiles(FtpClientGUI& ftpClientGUI){
 
     static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
 
-    if (ImGui::BeginTable("4ways", 4, flags))
+    if (ImGui::BeginTable("3ways", 3, flags))
     {
         // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
         ImGui::TableSetupColumn("文件名", ImGuiTableColumnFlags_NoHide);
@@ -533,6 +565,10 @@ void FtpClientGUI::Impl::SetStyle(){
     style.Colors[ImGuiCol_TitleBgActive] = ImColor(255,106,106,255);
 }
 
+bool FtpClientGUI::Impl::showing_modal(){
+    return b_showing_modal;
+}
+
 void FtpClientGUI::Impl::ChangeLocalDir(const std::string& wd){
     boost::filesystem::current_path(boost::filesystem::current_path() / wd);
     local_cwd = boost::filesystem::current_path().string();
@@ -556,6 +592,18 @@ void FtpClientGUI::Impl::ShowLog()
 void FtpClientGUI::Impl::ShowLoginModal()
 {
     //TODO
+}
+
+inline void FtpClientGUI::Impl::PrepareModal(){
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    if (ImGui::BeginPopupModal("modal")){
+        ImGui::Text(modal_msg ? modal_msg : "无消息！");
+        if (ImGui::Button("Close"))
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
 }
 
 void FtpClientGUI::Impl::ShowUserInfoBar()
@@ -585,7 +633,7 @@ void FtpClientGUI::Impl::ShowLocalFiles(FtpClientGUI& ftpClientGUI){
 
     static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
 
-    if (ImGui::BeginTable("4ways", 4, flags))
+    if (ImGui::BeginTable("3ways", 3, flags))
     {
         // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
         ImGui::TableSetupColumn("文件名", ImGuiTableColumnFlags_NoHide);

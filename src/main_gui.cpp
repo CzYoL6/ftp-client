@@ -113,7 +113,6 @@ int main(int, char**)
     //-----------------------------------------------------------------our data-----------------------------------------
 
     FtpClientGUI fcg;
-    fcg.Init();
 
     //-------------------------------------------------------------------------------------------------------------------
 
@@ -128,8 +127,18 @@ int main(int, char**)
         ImGui::NewFrame();
         fcg.SetStyle();
         {
+                if(ImGui::Begin("FtpClient", nullptr, ImGuiWindowFlags_NoCollapse)){
+                
+                if(fcg.showing_modal()){
+                    fcg.HideModal();
+                    ImGui::OpenPopup("modal");
+                }
+                fcg.PrepareModal();
 
-            if(ImGui::Begin("FtpClient", nullptr, ImGuiWindowFlags_NoCollapse)){
+                if(ImGui::Button("!!")) fcg.ShowModal("!!");
+
+                if(!fcg.inited()) fcg.Init();
+
                 fcg.ShowUserInfoBar();
 
                 ImGui::Separator();
@@ -149,6 +158,8 @@ int main(int, char**)
                 ImGui::BeginChild("scrolling_log", ImVec2(0, 200), true, ImGuiWindowFlags_HorizontalScrollbar);
                 fcg.ShowLog();
                 ImGui::EndChild();
+
+                
 
                 ImGui::End();
             }

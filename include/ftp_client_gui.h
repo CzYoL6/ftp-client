@@ -28,7 +28,10 @@ public:
     ~FtpClientGUI();
 
     void                Init();
+    bool                inited();
     void                SetStyle();
+    bool                showing_modal();
+    void                HideModal();
 
     //remote operations
     void                GetAllFiles();
@@ -47,6 +50,8 @@ public:
     void                ShowLocalFiles();
     void                ShowRomoteFiles();
     void                ShowLog();
+    void                ShowModal(const char* msg);
+    void                PrepareModal();             //in imgui, modal should be draw every frame
 
 private:
     class Impl;

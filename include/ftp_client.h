@@ -23,6 +23,7 @@ public:
     FtpClient();
     ~FtpClient();
     bool                    Init();
+    bool                    inited();
     bool                    Connect(const std::string& ip, int port);
     bool                    ListFile(std::string* files);
     bool                    UploadFile(const std::string& file_path);
