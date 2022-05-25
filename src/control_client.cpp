@@ -1,5 +1,4 @@
-#include <unistd.h>
-#include <errno.h>
+
 #include <cstring>
 #include <vector>
 #include <boost/algorithm/string.hpp>

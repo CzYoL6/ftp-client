@@ -1,5 +1,4 @@
-#include <unistd.h>
-#include <errno.h>
+
 #include <cstring>
 #include<fstream>
 #include "../include/data_client.h"
@@ -30,7 +29,7 @@ bool DataClient::SendData(std::fstream& stream, int& left)
     }
 
     int res = send(Client::get_sock(), tmp_buf, len_to_send, 0);
-    if(res == -1){
+    if(res == _sock_error){
         LOGERR("error sending.");
         return false;
     }
@@ -49,7 +48,7 @@ bool DataClient::RecvData(std::fstream& stream, int& total_len)
         LOGMSG("server shut down the connection, file transfer finished.");
         return true;
     }
-    else if(res == -1){
+    else if(res == _sock_error){
         LOGERR("error receiving data.\n");
         exit(-1);
     }
@@ -73,7 +72,7 @@ bool DataClient::RecvDir(char* dirs, int max_len, int &total_len)
         //exit(0);
         return true;
     }
-    else if(res == -1){
+    else if(res == _sock_error){
         LOGERR("error receiving data.");
         exit(-1);
     }
