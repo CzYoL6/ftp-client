@@ -8,6 +8,8 @@ aux_source_directory(${CMAKE_SOURCE_DIR}/src SRC)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
+link_directories(${CMAKE_SOURCE_DIR}/lib)
+
 add_executable(ftp_client ${SRC})
 
-target_link_libraries(${PROJECT_NAME} GL dl glfw boost_filesystem)
+target_link_libraries(${PROJECT_NAME} opengl32  libboost_filesystem-mgw6-mt-x32-1_79.a libglfw3dll.a ws2_32 wsock32)

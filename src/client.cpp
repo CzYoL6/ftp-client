@@ -29,11 +29,12 @@ bool Client::Connect(const std::string& ip, const int& port)
     memset(&server_addr,0,sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
-    if(inet_pton(AF_INET, ip.c_str(), &server_addr.sin_addr) == _sock_error){
-        LOGERR("error inet_pton");
-        return false;
+    server_addr.sin_addr.S_un.S_addr = inet_addr(ip.c_str());
+    // if(inet_pton(AF_INET, ip.c_str(), &server_addr.sin_addr) == _sock_error){
+    //     LOGERR("error inet_pton");
+    //     return false;
 
-    }
+    // }
     socklen_t len = sizeof(server_addr);
 
     if(connect(sock, (struct sockaddr*)(&server_addr), len) == _sock_error){
@@ -59,6 +60,7 @@ bool Client::Send(const char *send_buf, int len)
 bool Client::Recv(char* recv_buf, int max_len, int& len)
 {
     int res = recv(sock, recv_buf,  max_len, 0);
+
     if(res == _sock_error){
         LOGERR("error receiving.\n");
         return false;

@@ -28,7 +28,7 @@ public:
     bool                    ListFile(std::string* files);
     bool                    UploadFile(const std::string& file_path);
     bool                    DownloadFile(const std::string& file_path);
-    bool                    DeleteFile(const std::string& file_path);
+    bool                    _DeleteFile(const std::string& file_path);
     bool                    Login(const std::string& username, const std::string& pwd);
     bool                    ChangeDir(const std::string& dir_name);                      //CWD 改变路径
     bool                    GetCWD(std::string* cwd);                                    //PWD 获取当前的目录路径

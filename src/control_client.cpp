@@ -28,8 +28,9 @@ bool ControlClient::SendReq(const std::string& cmd)
 bool ControlClient::RecvResponse(int expected_code, std::string *msg)
 {
     memset(recv_buf, 0,RECVBUF_SZE);
+    
     if(!Client::Recv(recv_buf, RECVBUF_SZE, recv_cnt)) return false;
-
+    
     LOGMSG("received %d bytes: %s\n", recv_cnt, recv_buf);
 
     RESPONSE_TYPE res = DecodeResponse(recv_buf);

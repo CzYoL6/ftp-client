@@ -25,7 +25,7 @@ public:
     bool  			        ListFile(std::string* files);
     bool                    UploadFile(const std::string& file_path);
     bool                    DownloadFile(const std::string& file_path);
-    bool                    DeleteFile(const std::string& file_path);
+    bool                    _DeleteFile(const std::string& file_path);
 	bool 					Login(const std::string& username, const std::string& pwd);
 	bool 					ChangeDir(const std::string& dir_name);
 	bool					GetCWD(std::string* cwd);
@@ -133,7 +133,8 @@ bool FtpClient::Impl::ListFile(std::string* files)
 	memset(dirs, 0, sizeof(dirs));
 	int total_len = 0;
 	while(!dc.RecvDir(dirs + total_len, sizeof(dirs) - total_len, total_len));
-	
+
+
 	if(!p_cc->RecvResponse(EXPECTED_RES_CODE_TRANSFERFINISHED)) return false;
 
 	LOGMSG("%s%s%s", 
@@ -238,7 +239,7 @@ bool FtpClient::Impl::DownloadFile(const std::string& file_path)
 	return true;
 }
 
-bool FtpClient::Impl::DeleteFile(const std::string& file_path)
+bool FtpClient::Impl::_DeleteFile(const std::string& file_path)
 {
     std::string del_cmd = "DELE ";
 	del_cmd.append(file_path).append("\r\n");
@@ -323,9 +324,9 @@ bool FtpClient::DownloadFile(const std::string& file_path)
     return p_impl->DownloadFile(file_path);
 }
 
-bool FtpClient::DeleteFile(const std::string& file_path)
+bool FtpClient::_DeleteFile(const std::string& file_path)
 {
-    return p_impl->DeleteFile(file_path);
+    return p_impl->_DeleteFile(file_path);
 }
 
 bool FtpClient::Login(const std::string& username, const std::string& pwd)

@@ -38,7 +38,7 @@ public:
     void                ChangeDir(const std::string& wd);
     void                DownloadFile(const std::string& file_path);
     void                UploadFile(const std::string& file_path);
-    void                DeleteFile(const std::string& file_path);
+    void                _DeleteFile(const std::string& file_path);
 
     //local operations
     void                ListLocalFiles();
@@ -55,7 +55,7 @@ public:
 
 private:
     class Impl;
-    std::unique_ptr<Impl> p_impl{nullptr};
+    std::unique_ptr<Impl> p_impl;
 
 
 };

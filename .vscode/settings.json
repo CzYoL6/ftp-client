@@ -65,7 +65,9 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "xstring": "cpp",
+        "xiosbase": "cpp"
     },
     "cmake.configureOnOpen": false
 }

@@ -110,7 +110,7 @@ struct FtpClientGUI::File{
 
                     ImGui::PushID(Id);
                     if(ImGui::Button("delete")){
-                        ftpClientGUI.DeleteFile(this->name);
+                        ftpClientGUI._DeleteFile(this->name);
 
                         //refresh
                         ftpClientGUI.GetAllFiles();
@@ -334,7 +334,7 @@ void FtpClientGUI::UploadFile(const std::string& file_path){
     p_impl->UploadFile(file_path);
 }
 
-void FtpClientGUI::DeleteFile(const std::string& file_path){
+void FtpClientGUI::_DeleteFile(const std::string& file_path){
     p_impl->DeleteFile(file_path);
 }
 
@@ -457,7 +457,7 @@ void FtpClientGUI::Impl::UploadFile(const std::string& file_path){
 }
 
 void FtpClientGUI::Impl::DeleteFile(const std::string& file_path){
-    if(!p_fc->DeleteFile(file_path)){
+    if(!p_fc->_DeleteFile(file_path)){
         //show dialog
         this->ShowModal("删除失败！");
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef WIN32 
+#ifndef _WIN32
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -26,7 +26,6 @@
 #else
 
 #include <Ws2tcpip.h>
-#include <windows.h>
 
 #define _socket SOCKET
 #define _invalid_socket INVALID_SOCKET
