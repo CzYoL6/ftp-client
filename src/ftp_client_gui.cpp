@@ -48,12 +48,18 @@ struct FtpClientGUI::File{
 
                 ImGui::PushID(Id);
                 if(ImGui::Button("open")){
-                    //change dir and print wd
-                    ftpClientGUI.ChangeDir(this->name);
-                    //get files
-                    ftpClientGUI.GetAllFiles();
+                    if(!ftpClientGUI.fc_connected()){
+                        ftpClientGUI.ShowModal("请先连接！");
+                    }
+                    else{
 
-                    need_refresh = true;
+                        //change dir and print wd
+                        ftpClientGUI.ChangeDir(this->name);
+                        //get files
+                        ftpClientGUI.GetAllFiles();
+
+                        need_refresh = true;
+                    }
                 }
                 ImGui::PopID();
 
@@ -66,12 +72,14 @@ struct FtpClientGUI::File{
 
                 ImGui::PushID(Id);
                 if(ImGui::Button("open")){
+
                     //change dir and print wd
                     ftpClientGUI.ChangeLocalDir(this->name);
                     //get files
                     ftpClientGUI.ListLocalFiles();
 
                     need_refresh = true;
+
                 }
                 ImGui::PopID();
             } 
@@ -94,10 +102,15 @@ struct FtpClientGUI::File{
                     ImGui::PushID(Id);
 
                     if(ImGui::Button("download")){
-                        ftpClientGUI.DownloadFile(this->name);
+                        if(!ftpClientGUI.fc_connected()){
+                            ftpClientGUI.ShowModal("请先连接！");
+                        }
+                        else{
+                            ftpClientGUI.DownloadFile(this->name);
 
-                        //refresh
-                        ftpClientGUI.ListLocalFiles();
+                            //refresh
+                            ftpClientGUI.ListLocalFiles();
+                        }
                     }
 
                     ImGui::PopID();
@@ -113,10 +126,15 @@ struct FtpClientGUI::File{
 
                     ImGui::PushID(Id);
                     if(ImGui::Button("delete")){
-                        ftpClientGUI._DeleteFile(this->name);
+                        if(!ftpClientGUI.fc_connected()){
+                            ftpClientGUI.ShowModal("请先连接！");
+                        }
+                        else{
+                            ftpClientGUI._DeleteFile(this->name);
 
-                        //refresh
-                        ftpClientGUI.GetAllFiles();
+                            //refresh
+                            ftpClientGUI.GetAllFiles();
+                        }
                     }
 
                     ImGui::PopID();
@@ -133,10 +151,15 @@ struct FtpClientGUI::File{
                 ImGui::PushID(Id);
 
                 if(ImGui::Button("upload")){
-                    ftpClientGUI.UploadFile(this->name);
+                    if(!ftpClientGUI.fc_connected()){
+                        ftpClientGUI.ShowModal("请先连接！");
+                    }
+                    else{
+                        ftpClientGUI.UploadFile(this->name);
 
-                    //refresh
-                    ftpClientGUI.GetAllFiles();
+                        //refresh
+                        ftpClientGUI.GetAllFiles();
+                    }
                 }
 
                 ImGui::PopID();
@@ -157,6 +180,7 @@ public:
 
     void                                Init();
     bool                                inited();
+    bool                                fc_connected();
     //parse the file string got from the client, and store them in vector 'file_list_of_cur_dir'
     void                                SetStyle(); 
     bool                                showing_modal();
@@ -164,6 +188,7 @@ public:
 
     //remote operations
     void                                GetAllFiles(); 
+    void                                ClearFile();
     void                                ChangeDir(const std::string& wd);
     void                                DownloadFile(const std::string& file_path);
     void                                UploadFile(const std::string& file_path);
@@ -174,7 +199,6 @@ public:
     void                                ChangeLocalDir(const std::string& wd);
 
     //draw UI
-    void                                ShowLoginModal();
     void                                ShowUserInfoBar();
     void                                ShowLocalFiles(FtpClientGUI& ftpClientGUI);
     void                                ShowRomoteFiles(FtpClientGUI& ftpClientGUI);
@@ -309,8 +333,16 @@ bool FtpClientGUI::inited(){
     return p_impl->inited();
 }
 
+bool FtpClientGUI::fc_connected(){
+    return p_impl->fc_connected();
+}
+
 void FtpClientGUI::GetAllFiles(){
     p_impl->GetAllFiles();
+}
+
+void FtpClientGUI::ClearFile(){
+    p_impl->ClearFile();
 }
 
 void FtpClientGUI::SetStyle(){
@@ -359,11 +391,6 @@ void FtpClientGUI::ShowLog()
 }
 
 
-void FtpClientGUI::ShowLoginModal()
-{
-    p_impl->ShowLoginModal();
-}
-
 void FtpClientGUI::ShowUserInfoBar()
 {
     p_impl->ShowUserInfoBar();
@@ -392,6 +419,10 @@ FtpClientGUI::Impl::~Impl(){
 
 bool FtpClientGUI::Impl::inited(){
     return p_fc->inited();
+}
+
+bool FtpClientGUI::Impl::fc_connected(){
+    return p_fc->connected();
 }
 
 inline void FtpClientGUI::Impl::ShowModal(const char* msg){
@@ -430,27 +461,19 @@ void FtpClientGUI::Impl::Init(){
     logger = std::make_unique<Logger>();
     p_logger = logger.get();
 
-    std::string ip = "192.168.225.128";
 	
 	if(!p_fc->Init()){
         //show dialog
         ShowModal("初始化失败！");
     }
-    if(!p_fc->Connect(ip, 21)){
-        //show dialog
-        ShowModal("连接服务器失败！");
-    }
-    if(!p_fc->Login("ftptest", "T0KH3QTRKM")){
-        //show dialog
-        ShowModal("登录失败！");
-    }
-    if(!p_fc->GetCWD(&(this->cwd))){
-        //show dialog
-        ShowModal("获取当前路径失败！");
-    }
-    GetAllFiles();
+
+    
 
 
+}
+
+void FtpClientGUI::Impl::ClearFile(){
+    file_list_of_cur_dir.clear();
 }
 
 void FtpClientGUI::Impl::DownloadFile(const std::string& file_path){
@@ -537,7 +560,12 @@ void FtpClientGUI::Impl::ShowRomoteFiles(FtpClientGUI& ftpClientGUI){
 
     ImGui::PushID("refresh_button_remote");
     if(ImGui::Button("刷新")){
-        ftpClientGUI.GetAllFiles();
+        if(!ftpClientGUI.fc_connected()){
+            ftpClientGUI.ShowModal("请先连接！");
+        }
+        else{
+            ftpClientGUI.GetAllFiles();
+        }
     }
     ImGui::PopID();
 
@@ -614,10 +642,6 @@ void FtpClientGUI::Impl::ShowLog()
 }
 
 
-void FtpClientGUI::Impl::ShowLoginModal()
-{
-    //TODO
-}
 
 inline void FtpClientGUI::Impl::PrepareModal(){
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -633,9 +657,66 @@ inline void FtpClientGUI::Impl::PrepareModal(){
 
 void FtpClientGUI::Impl::ShowUserInfoBar()
 {
-    ImGui::Text("主机: %s", p_fc->GetIP().c_str());
+    // ImGui::Text("主机: %s", p_fc->GetIP().c_str());
+    // ImGui::SameLine();
+    // ImGui::Text("用户名: %s", p_fc->GetUsername().c_str());
+
+
+    ImGui::Text("主机: ");
     ImGui::SameLine();
-    ImGui::Text("用户名: %s", p_fc->GetUsername().c_str());
+    static char str0[128] = "192.168.225.128";
+    ImGui::InputText("host", str0, IM_ARRAYSIZE(str0));
+
+
+    ImGui::Text("用户名: ");
+    ImGui::SameLine();
+    static char str1[128] = "ftptest";
+    ImGui::InputText("username", str1, IM_ARRAYSIZE(str1));
+
+
+    ImGui::Text("密码: ");
+    ImGui::SameLine();
+    static char str2[128] = "T0KH3QTRKM";
+    ImGui::InputText("password", str2, IM_ARRAYSIZE(str2));
+
+    if(!p_fc->connected()){
+        if(ImGui::Button("连接")){
+            std::string ip = str0;
+            do{
+                if(!p_fc->Connect(ip, 21)){
+                    //show dialog
+                    p_fc->Close();
+                    ShowModal("连接服务器失败！");
+                    break;
+                }
+                if(!p_fc->Login(str1, str2)){ 
+                    //show dialog
+                    p_fc->DisConnect();
+                    p_fc->Close();
+                    ShowModal("登录失败！");
+                    break;
+                }
+                if(!p_fc->GetCWD(&(this->cwd))){
+                    //show dialog
+                    p_fc->DisConnect();
+                    p_fc->Close();
+                    ShowModal("获取当前路径失败！");
+                    break;
+                }
+                ShowModal("连接成功！");
+
+                GetAllFiles();
+
+            }while(0);
+        }
+    }
+    else{
+        if(ImGui::Button("断开")){
+            p_fc->DisConnect();
+            p_fc->Close();
+            ClearFile();
+        }
+    }
 
     ImGui::Text("模式: 被动模式");
 }
@@ -650,7 +731,9 @@ void FtpClientGUI::Impl::ShowLocalFiles(FtpClientGUI& ftpClientGUI){
 
     ImGui::PushID("refresh_button_local");
     if(ImGui::Button("刷新")){
+
         ftpClientGUI.ListLocalFiles();
+
     }
     ImGui::PopID();
 

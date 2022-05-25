@@ -12,6 +12,7 @@ class FtpClient::Impl{
 private:
     std::string ip;
 	std::string username;
+	
     std::unique_ptr<ControlClient> p_cc;
     int GetPort(const char* s);
 
@@ -22,6 +23,8 @@ public:
     bool                    Init();
 	bool					inited();
     bool                    Connect(const std::string& ip, int port);
+	void					DisConnect();
+	bool					connected();
     bool  			        ListFile(std::string* files);
     bool                    UploadFile(const std::string& file_path);
     bool                    DownloadFile(const std::string& file_path);
@@ -35,6 +38,7 @@ public:
 
 private:
 	bool b_inited{false};
+	bool b_connected{false};
 };
 
 FtpClient::Impl::Impl()
@@ -69,6 +73,7 @@ bool FtpClient::Impl::inited(){
 
 void FtpClient::Impl::Close(){
 	p_cc->Close();
+	b_inited = false;
 }
 
 bool FtpClient::Impl::Login(const std::string& username, const std::string& pwd){
@@ -98,10 +103,20 @@ bool FtpClient::Impl::Connect(const std::string& ip, int port)
 	else{
 		this->ip = ip;
 		
+		b_connected = true;
+
 		RESPONSE_TYPE res;
 		p_cc->RecvResponse(EXPECTED_RES_CODE_CONNECTION_ESTABLISHED);
 	}
 	return true;
+}
+
+void FtpClient::Impl::DisConnect(){
+	b_connected = false;
+}
+
+bool FtpClient::Impl::connected(){
+	return b_connected;
 }
 
 bool FtpClient::Impl::ListFile(std::string* files)
@@ -239,6 +254,7 @@ bool FtpClient::Impl::DownloadFile(const std::string& file_path)
 	return true;
 }
 
+
 bool FtpClient::Impl::_DeleteFile(const std::string& file_path)
 {
     std::string del_cmd = "DELE ";
@@ -307,6 +323,14 @@ bool FtpClient::Connect(const std::string& ip, int port)
 {
     if(!p_impl->Connect(ip, port)) return false;
     return true;
+}
+
+void FtpClient::DisConnect(){
+	p_impl->DisConnect();
+}
+
+bool FtpClient::connected(){
+	return p_impl->connected();
 }
 
 bool FtpClient::ListFile(std::string* files)

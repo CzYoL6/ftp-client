@@ -25,6 +25,8 @@ public:
     bool                    Init();
     bool                    inited();
     bool                    Connect(const std::string& ip, int port);
+    void                    DisConnect();
+    bool                    connected();
     bool                    ListFile(std::string* files);
     bool                    UploadFile(const std::string& file_path);
     bool                    DownloadFile(const std::string& file_path);
@@ -39,5 +41,6 @@ public:
 private:
     class Impl;
     std::unique_ptr<Impl> p_impl;
+
 
 };

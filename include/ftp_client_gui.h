@@ -29,12 +29,14 @@ public:
 
     void                Init();
     bool                inited();
+    bool                fc_connected();
     void                SetStyle();
     bool                showing_modal();
     void                HideModal();
 
     //remote operations
     void                GetAllFiles();
+    void                ClearFile();
     void                ChangeDir(const std::string& wd);
     void                DownloadFile(const std::string& file_path);
     void                UploadFile(const std::string& file_path);
@@ -45,7 +47,6 @@ public:
     void                ChangeLocalDir(const std::string& wd);
 
     //draw GUI
-    void                ShowLoginModal();
     void                ShowUserInfoBar();
     void                ShowLocalFiles();
     void                ShowRomoteFiles();
