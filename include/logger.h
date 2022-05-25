@@ -44,14 +44,14 @@ public:
 };
 
 extern ILogger* p_logger;
-// #define PRINTGUI(format, ...) do{ if(p_logger) p_logger->AddLog(format, ## __VA_ARGS__); }while(0)
-// #define PRINT(color, tag, format, ...) do{printf(color " " tag NONE " " format, ## __VA_ARGS__);}while(0)
-// #define LOGERR(msg, ...) do{PRINTGUI(msg, ## __VA_ARGS__) ; \
-//                                         PRINT( RED, "[ ERROR ]",  "(%s:%d)   " msg " \n" , __FILE__, __LINE__, ## __VA_ARGS__);}while(0)
-// #define LOGMSG(msg, ...) do{PRINTGUI(msg, ## __VA_ARGS__) ; \
-//                                         PRINT( GREEN, "[MESSAGE]", "(%s:%d)   " msg "\n"  , __FILE__, __LINE__, ## __VA_ARGS__);}while(0)
+#define PRINTGUI(format, ...) do{ if(p_logger) p_logger->AddLog(format, ## __VA_ARGS__); }while(0)
+#define PRINT(color, tag, format, ...) do{printf(color " " tag NONE " " format, ## __VA_ARGS__);}while(0)
+#define LOGERR(msg, ...) do{PRINTGUI(msg, ## __VA_ARGS__) ; \
+                                        PRINT( RED, "[ ERROR ]",  "(%s:%d)   " msg " \n" , __FILE__, __LINE__, ## __VA_ARGS__);}while(0)
+#define LOGMSG(msg, ...) do{PRINTGUI(msg, ## __VA_ARGS__) ; \
+                                        PRINT( GREEN, "[MESSAGE]", "(%s:%d)   " msg "\n"  , __FILE__, __LINE__, ## __VA_ARGS__);}while(0)
 
-#define PRINTGUI(format, ...) 
-#define PRINT(color, tag, format, ...) 
-#define LOGERR(msg, ...) 
-#define LOGMSG(msg, ...) 
+// #define PRINTGUI(format, ...) 
+// #define PRINT(color, tag, format, ...) 
+// #define LOGERR(msg, ...) 
+// #define LOGMSG(msg, ...) 
