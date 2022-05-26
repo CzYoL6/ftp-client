@@ -676,7 +676,7 @@ void FtpClientGUI::Impl::ShowUserInfoBar()
 
     ImGui::Text("密码: ");
     ImGui::SameLine();
-    static char str2[128] = "T0KH3QTRKM";
+    static char str2[128] = "123456";
     ImGui::InputText("password", str2, IM_ARRAYSIZE(str2));
 
     if(!p_fc->connected()){
