@@ -135,7 +135,7 @@ int main(int, char**)
         
         {
             // if(ImGui::Begin("FtpClient", nullptr, ImGuiWindowFlags_NoCollapse)){
-            if(ImGui::Begin("FtpClient", &open, ImGuiWindowFlags_NoCollapse)){
+            if(ImGui::Begin("FtpClient", &open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar)){
                 
                 //open modal in this way(keep OpenPopup and BeginPopupModal in the same ID stack)
                 if(fcg.showing_modal()){
@@ -170,7 +170,7 @@ int main(int, char**)
                 ImGui::Separator();
 
                 ImGui::BeginChild("scrolling_log", 
-                                    ImVec2(0.0f, 0.0f), 
+                                    ImVec2(0.0f, (ImGui::GetWindowHeight() - 20) / 3), 
                                     true, 
                                     ImGuiWindowFlags_HorizontalScrollbar);
                 fcg.ShowLog();
